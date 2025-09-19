@@ -9,7 +9,7 @@ This guide provides SQL scripts and verification points to ensure turtle interac
 - **Interactions:** Outcomes, GPS, release times always captured  
 - **Nests:** Sequential IDs, valid hatch dates, track widths, relocation completeness, incubation data present  
 - **Excavations:** Recorded on time with full details  
-- **Failures:** Correct failure cause assigned  
+- **Nest failure:** Correct failure cause assigned  
 
 All verification queries should ideally return **zero results** unless otherwise noted.
 
@@ -21,7 +21,7 @@ All verification queries should ideally return **zero results** unless otherwise
 2. Connect to the database storing turtle interaction and nest data.  
 3. Copy and run the SQL scripts provided in each section.  
 4. Investigate any records returned — they may indicate data quality issues.  
-5. Spatial map location data for correct positioning verification.  
+5. Spatially map coordinates for correct nest location positioning verification.  
 6. Repeat these checks periodically to ensure **high-quality turtle monitoring data**.
 
 ---
@@ -120,7 +120,7 @@ AND interaction_gps = '0.000000, 0.000000'
 ORDER BY caught_date_time DESC;
 ```
 
-### Protect Unknown Tags
+### Protect 'None' Tags from updates
 ```sql
 SELECT * FROM turtle 
 WHERE turtle_id IN (162,163,164,165,166,168) 
@@ -136,7 +136,7 @@ AND current_tag_2 <> 'None';
 Nest IDs should follow sequentially.
 
 ### Expected Hatch Date
-Should be 60 days after laid date:
+Should be ~60 days after laid date:
 ```sql
 SELECT nest_id, laid_date_time, expected_hatch_datetime,
        DATEDIFF(day, CAST(laid_date_time AS date), CAST(expected_hatch_datetime AS date)) AS day_diff
@@ -159,7 +159,7 @@ AND reason_for_no_track_width IS NULL;
 ```
 
 ### Nest Location (Manual Mapping Check)
-Use ArcGIS, PowerBI, or mapping tool to confirm correct beach placement.
+Map coordinates to confirm correct nest location placement.
 
 ### Coordinates Check
 ```sql
@@ -188,7 +188,7 @@ AND distance_from_hwm_m <= 0
 ORDER BY distance_from_hwm_m ASC;
 ```
 
-### Relocation Data
+### Nest Relocation
 ```sql
 SELECT * FROM v_all_nest_fields  
 WHERE is_relocated = 'Yes'  
@@ -215,7 +215,7 @@ AND laid_date_time > '2023';
 ```
 
 ### Excavation Records
-Check if excavation happens 3 days after hatch:
+Check if excavation happens 3 days after nest hatching:
 ```sql
 SELECT nest_id, laid_date_time, actual_hatch_datetime, 
        DATEDIFF(DAY, actual_hatch_datetime, GETDATE()) AS diff 
@@ -227,7 +227,7 @@ AND hatching_outcome_name <> 'Fail'
 ORDER BY 4 ASC;
 ```
 
-### Excavation Completeness
+### Complete  Nest Excavation Records
 ```sql
 SELECT * FROM nest_excavation 
 WHERE sun_exposure_type_id IS NULL 
